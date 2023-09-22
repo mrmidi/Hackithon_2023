@@ -39,3 +39,22 @@ model.fit(X, y, epochs=10, batch_size=64, validation_split=0.2)
 model.save('wavelet_lstm_model.keras')
 
 print("Model training completed.")
+
+# ... [Your previous code here]
+
+# 1. Load the test data
+test_df = pd.read_csv('test.csv')
+test_df['data'] = test_df['data'].apply(convert_to_array)
+
+# 2. Pre-process the test data
+test_df['wavelet_coeffs'] = test_df['data'].apply(wavelet_transform)
+
+X_test = np.array(test_df['wavelet_coeffs'].to_list())
+y_test = test_df['label'].values
+
+# Reshape input to be [samples, time steps, features]
+X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+
+# 3. Evaluate the model on the test data
+loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
+print(f"Test Accuracy: {accuracy*100:.2f}%")
