@@ -7,7 +7,36 @@
 <body>
     <h1>Plot</h1>
     <p>Here is a plot of the data.</p>
-    <img src="{{ url_for('static', filename=image_path) }}" alt="my plot">
+    <img id="plot-image" src="{{ url_for('static', filename=image_path) }}" alt="my plot">
 
+    <script>
+        // Get the current image index from the URL path
+        const currentPath = window.location.pathname;
+        const pathParts = currentPath.split('/');
+        let idx = parseInt(pathParts[pathParts.length - 1]) || 0;
+    
+        // Update the image path and URL based on the current index
+        function updateImage() {
+            // Update the URL with the new index
+            const newUrl = `/draw/${idx}`;
+            window.location.href = newUrl;
+        }
+    
+        // Listen for key events
+        document.addEventListener('keydown', (event) => {
+            switch (event.key) {
+                case 'ArrowLeft':
+                    idx = Math.max(0, idx - 1);
+                    updateImage();
+                    break;
+                case 'ArrowRight':
+                    idx++;
+                    updateImage();
+                    break;
+            }
+        });
+    </script>
+    
+    
 </body>
 </html>

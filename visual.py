@@ -4,36 +4,53 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import parse_xml as px
+
+import datetime
 
 app = Flask(__name__)
+
+
+SAMPLES_PER_SEGMENT = 1200  # 120 Hz * 10 seconds
 
 @app.route('/')
 def index():
     return render_template('index.html') # take template from templates folder
 
-SAMPLES_PER_SEGMENT = 1200  # 120 Hz * 10 seconds
 
-import numpy as np
-
-SAMPLES_PER_SEGMENT = 1200  # 120 Hz * 10 seconds
 
 @app.route('/draw/<int:idx>')
 def draw(idx):
     # Define start and end points based on index and segment size
     start = idx * SAMPLES_PER_SEGMENT
     end = (idx + 1) * SAMPLES_PER_SEGMENT
-
-    # Generate a time array for the segment
-    # Start time is idx * 10 seconds and end time is (idx + 1) * 10 seconds
-    time_array = np.linspace(idx * 10, (idx + 1) * 10, SAMPLES_PER_SEGMENT)
+    segment_start_time = idx * 10
+    segment_end_time = (idx + 1) * 10
+    time_array = np.linspace(segment_start_time, segment_end_time, SAMPLES_PER_SEGMENT)
 
     # Open the HDF5 file and extract the subset of data
     with h5.File('TBI_003.hdf5', 'r') as f:
         abp_data = f['waves']['art'][start:end]
 
+    # Open and parse the XML
+    with open('TBI_003.artf', 'r') as xml_file:
+        xml_content = xml_file.read()
+    artefacts_data = px.parse_icm_artefacts(xml_content)
+    art_artefacts = artefacts_data['art']
+
     # Plot the data against the time array
     plt.figure()
     plt.plot(time_array, abp_data)
+
+    # Shade regions with artefacts
+    for artefact in art_artefacts:
+        artefact_start_time = (datetime.datetime.strptime(artefact['StartTime'], "%d/%m/%Y %H:%M:%S.%f") - datetime.datetime(2020, 3, 1)).total_seconds()
+        artefact_end_time = (datetime.datetime.strptime(artefact['EndTime'], "%d/%m/%Y %H:%M:%S.%f") - datetime.datetime(2020, 3, 1)).total_seconds()
+
+        # Check overlap
+        if artefact_start_time < segment_end_time and artefact_end_time > segment_start_time:
+            plt.axvspan(max(artefact_start_time, segment_start_time), min(artefact_end_time, segment_end_time), color='red', alpha=0.5)
+
     plt.title(f"ABP Waveform: Segment {idx} (10 seconds)")
     plt.xlabel("Time (seconds)")
     plt.ylabel("Amplitude")
@@ -45,7 +62,6 @@ def draw(idx):
 
     # Return the plot
     return render_template('plot.html', image_path=image_path)
-
 
 
 
