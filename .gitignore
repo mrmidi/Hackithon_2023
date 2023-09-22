@@ -2,3 +2,4 @@
 TBI_003.hdf5
 blocks_with_labels.csv
 blocks.csv
+*.csv
