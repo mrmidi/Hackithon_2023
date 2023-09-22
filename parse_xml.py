@@ -37,4 +37,4 @@ with open('TBI_003.artf', 'r') as f:
 f.close()
 
 parsed_data = parse_icm_artefacts(xml_content)
-print(parsed_data)
+# print(parsed_data)

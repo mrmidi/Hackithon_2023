@@ -64,7 +64,7 @@ def draw(idx):
     plt.close()
 
     # Return the plot
-    return render_template('plot.html', image_path=image_path)
+    return render_template('plot.html', image_path=image_path, anomalies=art_artefacts)
 
 
 
