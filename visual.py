@@ -10,26 +10,26 @@ import datetime
 
 app = Flask(__name__)
 
-
-SAMPLES_PER_SEGMENT = 1200  # 120 Hz * 10 seconds
+SAMPLES_PER_SEGMENT = 1000  # 100 Hz * 10 seconds
 
 @app.route('/')
 def index():
-    return render_template('index.html') # take template from templates folder
-
-
+    return render_template('index.html')  # take template from templates folder
 
 @app.route('/draw/<int:idx>')
 def draw(idx):
-    # Define start and end points based on index and segment size
-    start = idx * SAMPLES_PER_SEGMENT
-    end = (idx + 1) * SAMPLES_PER_SEGMENT
-    segment_start_time = idx * 10
-    segment_end_time = (idx + 1) * 10
-    time_array = np.linspace(segment_start_time, segment_end_time, SAMPLES_PER_SEGMENT)
-
-    # Open the HDF5 file and extract the subset of data
     with h5.File('TBI_003.hdf5', 'r') as f:
+        # Get the start time of the entire dataset from the HDF5 file
+        base_timestamp = datetime.datetime.utcfromtimestamp(f['waves']['art'].attrs['index'][0][1] / 1e6)  # Convert from microseconds
+
+        # Define start and end points based on index and segment size
+        start = idx * SAMPLES_PER_SEGMENT
+        end = (idx + 1) * SAMPLES_PER_SEGMENT
+
+        segment_start_time = base_timestamp + datetime.timedelta(seconds=idx*10)
+        segment_end_time = segment_start_time + datetime.timedelta(seconds=10)
+        time_array = np.arange(segment_start_time, segment_end_time, datetime.timedelta(seconds=10/SAMPLES_PER_SEGMENT))
+
         abp_data = f['waves']['art'][start:end]
 
     # Open and parse the XML
@@ -44,19 +44,22 @@ def draw(idx):
 
     # Shade regions with artefacts
     for artefact in art_artefacts:
-        artefact_start_time = (datetime.datetime.strptime(artefact['StartTime'], "%d/%m/%Y %H:%M:%S.%f") - datetime.datetime(2020, 3, 1)).total_seconds()
-        artefact_end_time = (datetime.datetime.strptime(artefact['EndTime'], "%d/%m/%Y %H:%M:%S.%f") - datetime.datetime(2020, 3, 1)).total_seconds()
+        artefact_start_time = datetime.datetime.strptime(artefact['StartTime'], "%d/%m/%Y %H:%M:%S.%f")
+        artefact_end_time = datetime.datetime.strptime(artefact['EndTime'], "%d/%m/%Y %H:%M:%S.%f")
 
         # Check overlap
         if artefact_start_time < segment_end_time and artefact_end_time > segment_start_time:
             plt.axvspan(max(artefact_start_time, segment_start_time), min(artefact_end_time, segment_end_time), color='red', alpha=0.5)
 
     plt.title(f"ABP Waveform: Segment {idx} (10 seconds)")
-    plt.xlabel("Time (seconds)")
+    plt.xlabel("Time (DD/MM/YYYY HH:MM:SS)")
     plt.ylabel("Amplitude")
-    
+    plt.xticks(rotation=45)
+    plt.gca().xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%d/%m/%Y %H:%M:%S'))
+
     # Save the plot
     image_path = f'plot_{idx}.png'
+    plt.tight_layout()
     plt.savefig(f'static/{image_path}')
     plt.close()
 
@@ -66,14 +69,25 @@ def draw(idx):
 
 
 
-@app.route("/inspect")
-def inspect_dataset():
-    with h5.File('TBI_003.hdf5', 'r') as f:
-        art_dataset = f['waves']['art']
-        shape = art_dataset.shape
-        dtype = art_dataset.dtype
-        print(shape, dtype)
-    return "See console for output"
+# @app.route("/inspect")
+# def inspect_dataset():
+#     with h5.File('TBI_003.hdf5', 'r') as f:
+#         for group_name in f['waves']['art']
+#             group = f[group_name]
+#             print(f"Inspecting {group_name}:")
+#             for key in group.keys():
+#                 print(f"  {key}")
+#                 item = group[key]
+#                 if isinstance(item, h5.Group):
+#                     for subkey in item.keys():
+#                         print(f"    {subkey}")
+#                 else:
+#                     print(f"    {key} is a dataset, not a group")
+    
+#     return "See console for deep inspection output"
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 
 @app.route('/get_keys')
@@ -81,6 +95,21 @@ def list_keys_in_waves():
     with h5.File('TBI_003.hdf5', 'r') as f:
         waves_keys = list(f['waves'].keys())
     return waves_keys
+
+@app.route('/get_all_keys')
+def list_all_keys():
+    with h5.File('TBI_003.hdf5', 'r') as f:
+        all_keys = list(f.keys())
+    return all_keys
+
+@app.route('/explore_keys')
+def explore_hdf5():
+    with h5.File('TBI_003.hdf5', 'r') as f:
+        for key in f.keys():
+            print(f"Contents of '{key}':")
+            print(list(f[key].keys()))
+            print("\n")
+
 
 if __name__ == '__main__':
     app.run(debug=True)
