@@ -38,4 +38,4 @@ model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy']
 model.fit(X, y, epochs=15, batch_size=64, validation_split=0.3)
 
 # Save the model
-model.save('lstm_model.keras')
+model.save('enchanced_lstm_model.keras')

@@ -1,3 +1,4 @@
+# Simple RNN model for classifying blocks with labels
 import numpy as np
 import pandas as pd
 from tensorflow.keras.models import Sequential
@@ -5,7 +6,7 @@ from tensorflow.keras.layers import SimpleRNN, Dense
 from tensorflow.keras.optimizers import Adam
 
 # Load the data
-df = pd.read_csv('blocks_with_labels.csv')
+df = pd.read_csv('blocks.csv')
 df['data'] = df['data'].str.strip('[]').str.split().apply(lambda x: [float(i) for i in x])
 
 # Convert the string representation of the list to an actual list
