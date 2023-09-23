@@ -6,6 +6,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import parse_xml as px
 
+import matplotlib.dates as mdates
+
 import json
 
 import datetime
@@ -56,8 +58,11 @@ def draw(idx):
     plt.title(f"ABP Waveform: Segment {idx} (10 seconds)")
     plt.xlabel("Time (DD/MM/YYYY HH:MM:SS)")
     plt.ylabel("Amplitude")
-    plt.xticks(rotation=45)
-    plt.gca().xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%d/%m/%Y %H:%M:%S'))
+    plt.xticks(rotation=0)
+
+    ax = plt.gca()
+    ax.xaxis.set_major_locator(mdates.SecondLocator(interval=4))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%Y %H:%M:%S'))
 
     # Save the plot
     image_path = f'plot_{idx}.png'
