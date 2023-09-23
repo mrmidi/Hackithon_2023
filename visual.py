@@ -6,6 +6,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import parse_xml as px
 
+import json
+
 import datetime
 
 app = Flask(__name__)
@@ -63,8 +65,26 @@ def draw(idx):
     plt.savefig(f'static/{image_path}')
     plt.close()
 
+       # Load the results from the JSON file
+    with open('results.json', 'r') as f:
+        results_json = json.load(f)
+
+    true_positives = [r['block_number'] for r in results_json if r['true_label'] == 1 and r['pred_label'] == 1]
+    true_negatives = [r['block_number'] for r in results_json if r['true_label'] == 0 and r['pred_label'] == 0]
+    false_positives = [r['block_number'] for r in results_json if r['true_label'] == 0 and r['pred_label'] == 1]
+    false_negatives = [r['block_number'] for r in results_json if r['true_label'] == 1 and r['pred_label'] == 0]
+
+    # print(f"True Positives: {true_positives}")
+    print("True Negatives:", true_negatives)
+    print("False Positives:", false_positives)
+    print("False Negatives:", false_negatives)
+
+    # Return the plot with the processed JSON data
+    return render_template('plot.html', image_path=image_path, true_positives=true_positives, true_negatives=true_negatives, false_positives=false_positives, false_negatives=false_negatives)
+
+
     # Return the plot
-    return render_template('plot.html', image_path=image_path, anomalies=art_artefacts)
+    # return render_template('plot.html', image_path=image_path, anomalies=art_artefacts)
 
 
 

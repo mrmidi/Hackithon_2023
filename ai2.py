@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import LSTM, Dense, Dropout
 
 # 1. Preprocess the data
 
@@ -27,15 +27,30 @@ y = df['label'].values
 # Reshape input to be [samples, time steps, features]
 X = np.reshape(X, (X.shape[0], X.shape[1], 1))
 
-# 2. Define the LSTM model
+# Define the enhanced LSTM model
 model = Sequential()
-model.add(LSTM(100, input_shape=(X.shape[1], X.shape[2])))
+
+# First LSTM layer
+model.add(LSTM(100, input_shape=(X.shape[1], X.shape[2]), return_sequences=True))
+model.add(Dropout(0.2))  # Dropout layer to prevent overfitting
+
+# Second LSTM layer
+model.add(LSTM(50, return_sequences=True))
+model.add(Dropout(0.2))  # Dropout layer
+
+# Third LSTM layer
+model.add(LSTM(50))
+model.add(Dropout(0.2))  # Dropout layer
+
+# Fully connected layers
+model.add(Dense(50, activation='relu'))
+model.add(Dropout(0.2))  # Dropout layer
 model.add(Dense(1, activation='sigmoid'))
 
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-# 3. Train the LSTM model on the data
+# Train the enhanced LSTM model
 model.fit(X, y, epochs=15, batch_size=64, validation_split=0.3)
 
 # Save the model
-model.save('lstm_model.keras')
+model.save('enhanced_lstm_model.keras')
