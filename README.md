@@ -1,4 +1,4 @@
-# Hackithon_2023
+# Hackithon 2023
 
 This project aims to analyze and classify ABP (Arterial Blood Preasure) waveforms using advanced machine learning techniques. Specifically, we use deep learning models, such as LSTM networks, to recognize patterns within waveform data and make predictions. The main focus is to identify and mark anomalous segments within the waveform data.
 
