@@ -5,6 +5,8 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import SimpleRNN, Dense
 from tensorflow.keras.optimizers import Adam
 
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
 # Load the data
 df = pd.read_csv('blocks.csv')
 df['data'] = df['data'].str.strip('[]').str.split().apply(lambda x: [float(i) for i in x])
@@ -34,7 +36,8 @@ model.add(Dense(1, activation='sigmoid'))
 model.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=['accuracy'])
 
 # Train the model
-model.fit(X, y, epochs=15, batch_size=64, validation_split=0.3)
+model.fit(X, y, epochs=2, batch_size=64, validation_split=0.3)
 
 # Save the model
 model.save('rnn_model.keras')
+model.save_weights('rnn_model_weights.h5')

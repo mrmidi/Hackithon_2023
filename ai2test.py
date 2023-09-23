@@ -5,6 +5,8 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 import json
 
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
 
 # Load test data
 df_test = pd.read_csv('blocks.csv')
@@ -15,7 +17,7 @@ y_test = df_test['label'].values
 
 # Define model architecture (as per your training script)
 model = Sequential()
-model.add(LSTM( , input_shape=(X_test.shape[1], X_test.shape[2])))
+model.add(LSTM(100, input_shape=(X_test.shape[1], X_test.shape[2])))
 model.add(Dense(1, activation='sigmoid'))
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
@@ -25,23 +27,6 @@ model.load_weights('lstm_model.keras')
 # Predict
 y_prob = model.predict(X_test).flatten()
 y_pred = (y_prob > 0.5).astype(int)  # Threshold the probabilities to get class labels
-
-# # Print results for each block
-# for i in range(len(y_test)):
-#     block_number = df_test['block_number'].iloc[i]
-#     true_label = y_test[i]
-#     pred_label = y_pred[i]
-
-#     if true_label == 1 and pred_label == 1:
-#         result = "True Positive"
-#     elif true_label == 0 and pred_label == 1:
-#         result = "False Positive"
-#     elif true_label == 1 and pred_label == 0:
-#         result = "False Negative"
-#     else:
-#         result = "True Negative"
-
-#     print(f"Block Number: {block_number}, Result: {result}")
 
 
 results = []
@@ -70,10 +55,14 @@ with open('results.json', 'w') as outfile:
 # Print the JSON output
 print(json_output)
 
-# Compute overall metrics
-accuracy = np.mean(y_test == y_pred)
-precision = np.sum((y_test == 1) & (y_pred == 1)) / np.sum(y_pred)
-recall = np.sum((y_test == 1) & (y_pred == 1)) / np.sum(y_test)
-f1 = 2 * precision * recall / (precision + recall)
+# Compute and print overall metrics
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred)
 
-# Print overall metrics
+print(f"\nOverall Metrics:")
+print(f"Accuracy: {accuracy*100:.2f}%")
+print(f"Precision: {precision*100:.2f}%")
+print(f"Recall: {recall*100:.2f}%")
+print(f"F1 Score: {f1*100:.2f}%")
